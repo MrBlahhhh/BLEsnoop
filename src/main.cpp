@@ -9,8 +9,8 @@ void printHex(const uint8_t* data, size_t length) {
     }
 }
 
-class MyAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
-    void onResult(NimBLEAdvertisedDevice* advertisedDevice) {
+class MyScanCallbacks : public NimBLEScanCallbacks {
+    void onResult(const NimBLEAdvertisedDevice* advertisedDevice) {
         std::string name = advertisedDevice->getName();
         std::string address = advertisedDevice->getAddress().toString();
         
@@ -42,10 +42,9 @@ class MyAdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
                 Serial.printf("Mfg Data Length: %d bytes\n", mfgData.length());
             }
             
-            const uint8_t* rawPayload = advertisedDevice->getPayload();
-            size_t payloadLength = advertisedDevice->getPayloadLength();
+            const std::vector<uint8_t>& rawPayload = advertisedDevice->getPayload();
             Serial.print("Raw Payload (Hex): ");
-            printHex(rawPayload, payloadLength);
+            printHex(rawPayload.data(), rawPayload.size());
             Serial.println();
             Serial.printf("-----------------------------------\n");
         }
@@ -60,13 +59,13 @@ void setup() {
     NimBLEDevice::init("");
     
     NimBLEScan* pBLEScan = NimBLEDevice::getScan();
-    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks(), true);
+    pBLEScan->setScanCallbacks(new MyScanCallbacks(), true);
     
     pBLEScan->setActiveScan(false); 
     pBLEScan->setInterval(100); 
     pBLEScan->setWindow(99);    
     
-    pBLEScan->start(SCAN_TIME_SECONDS, nullptr, false);
+    pBLEScan->start(SCAN_TIME_SECONDS, false, false);
 }
 
 void loop() {
